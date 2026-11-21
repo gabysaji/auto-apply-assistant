@@ -78,7 +78,7 @@ def render_with_scale(data, scale):
     # Availability Line
     pdf.set_text_color(40, 40, 40)
     pdf.set_font("Helvetica", "I", 8.8 * scale)
-    pdf.cell(w=pdf.epw, h=4.8 * scale, text="Availability: Immediate Joiner | Open to Relocation Across India (Bengaluru, Kochi, Chennai, Hyderabad, Pune) & Remote", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(w=pdf.epw, h=4.8 * scale, text="Availability: Immediate Joiner | Open to Relocation Across India & Remote", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.set_text_color(0, 0, 0)
     pdf.ln(sec_gap)
 
