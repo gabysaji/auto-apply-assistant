@@ -16,7 +16,7 @@ for term, loc in queries:
         search_term=term,
         location=loc,
         results_wanted=5,
-        hours_old=168,
+        hours_old=48,
         country_indeed="India",
         linkedin_fetch_description=True,
     )

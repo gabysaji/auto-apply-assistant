@@ -20,7 +20,14 @@ MAX_JOBS = 10
 with open("my_resume.txt", "r") as f:
     base_resume = f.read()
 
-jobs = pd.read_csv("jobs.csv").head(MAX_JOBS)
+seen_file = "seen_jobs.txt"
+seen_urls = set()
+if os.path.exists(seen_file):
+    with open(seen_file, "r") as sf:
+        seen_urls = set(line.strip() for line in sf if line.strip())
+
+raw_jobs = pd.read_csv("jobs.csv")
+jobs = raw_jobs[~raw_jobs["job_url"].isin(seen_urls)].head(MAX_JOBS)
 os.makedirs("applications", exist_ok=True)
 tracker_rows = []
 
@@ -182,6 +189,8 @@ for idx, row in jobs.iterrows():
 
     score = result.get("ats_score", 0)
     if score < MIN_SCORE:
+        with open(seen_file, "a") as sf:
+            sf.write(url + "\n")
         print(f"{score}% (Skipped)")
         continue
 
@@ -203,9 +212,18 @@ for idx, row in jobs.iterrows():
         "Apply_URL": url,
         "Status": "Ready to Submit"
     })
+    with open(seen_file, "a") as sf:
+        sf.write(url + "\n")
     print(f"{score}% -> Saved!")
 
 if tracker_rows:
-    df_out = pd.DataFrame(tracker_rows).sort_values(by="ATS_Score", ascending=False)
+    new_df = pd.DataFrame(tracker_rows)
+    if os.path.exists("tracker.csv"):
+        old_df = pd.read_csv("tracker.csv")
+        df_out = pd.concat([old_df, new_df], ignore_index=True).drop_duplicates(subset=["Apply_URL"])
+    else:
+        df_out = new_df
+    df_out = df_out.sort_values(by="ATS_Score", ascending=False)
     df_out.to_csv("tracker.csv", index=False)
+    open(seen_file, "w").writelines(open(seen_file).readlines()[-500:])
     print(f"\nDone in seconds! Saved {len(df_out)} balanced 1-page packets to tracker.csv.")
