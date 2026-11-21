@@ -15,7 +15,7 @@ LINKEDIN_URL = "https://www.linkedin.com/in/gabysaji"
 GITHUB_URL = "https://github.com/gabysaji"
 MODELS = ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.8-flash"]
 MIN_SCORE = 70
-MAX_JOBS = 10
+MAX_JOBS = 15
 
 with open("my_resume.txt", "r") as f:
     base_resume = f.read()
@@ -155,6 +155,8 @@ for idx, row in jobs.iterrows():
     company = str(row.get("company", "Company"))
     url = str(row.get("job_url", ""))
     jd = str(row.get("description", ""))
+    loc = str(row.get("location", "India"))
+    region = str(row.get("target_region", "India"))
 
     if not jd or jd == "nan":
         continue
@@ -188,10 +190,15 @@ for idx, row in jobs.iterrows():
         continue
 
     score = result.get("ats_score", 0)
-    if score < MIN_SCORE:
+    visa_ok = result.get("visa_viable", True)
+    visa_note = result.get("sponsorship_note", "N/A")
+    sal_note = result.get("salary_note", "Not listed")
+
+    if score < MIN_SCORE or not visa_ok:
         with open(seen_file, "a") as sf:
             sf.write(url + "\n")
-        print(f"{score}% (Skipped)")
+        reason = "No Sponsorship/Local Only" if not visa_ok else "Below Threshold"
+        print(f"{score}% ({reason} - Skipped)")
         continue
 
     safe_name = re.sub(r"[^a-zA-Z0-9]+", "_", f"{company}_{title}")[:40]
@@ -206,8 +213,12 @@ for idx, row in jobs.iterrows():
 
     tracker_rows.append({
         "ATS_Score": score,
+        "Region": region,
+        "Location": loc,
         "Company": company,
         "Role": title,
+        "Sponsorship": visa_note,
+        "Salary_Info": sal_note,
         "Resume_PDF": pdf_path,
         "Apply_URL": url,
         "Status": "Ready to Submit"
