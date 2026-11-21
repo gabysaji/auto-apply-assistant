@@ -1,3 +1,4 @@
+import time
 import pandas as pd
 from jobspy import scrape_jobs
 
@@ -22,13 +23,14 @@ for term, loc, country, count in queries:
             results_wanted=count,
             hours_old=72,
             country_indeed=country,
-            linkedin_fetch_description=True,
+            linkedin_fetch_description=False,
         )
         if df is not None and not df.empty:
             df["target_region"] = country
             all_jobs.append(df)
     except Exception as e:
         print(f"  (Skipped {term} in {loc}: {e})")
+    time.sleep(3)
 
 jobs = pd.concat(all_jobs, ignore_index=True).drop_duplicates(subset=["job_url"])
 jobs = jobs[~jobs["title"].str.contains("Director|Principal|VP|Head of", case=False, na=False)]
