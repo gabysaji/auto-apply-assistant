@@ -11,8 +11,8 @@ from fpdf import FPDF
 load_dotenv()
 client = genai.Client()
 
-LINKEDIN_URL = "https://linkedin.com"
-GITHUB_URL = "https://github.com"
+LINKEDIN_URL = "https://www.linkedin.com/in/gabysaji"
+GITHUB_URL = "https://github.com/gabysaji"
 MODELS = ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.8-flash"]
 MIN_SCORE = 70
 MAX_JOBS = 10
