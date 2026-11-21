@@ -78,7 +78,12 @@ def render_with_scale(data, scale):
     # Availability Line
     pdf.set_text_color(40, 40, 40)
     pdf.set_font("Helvetica", "I", 8.8 * scale)
-    pdf.cell(w=pdf.epw, h=4.8 * scale, text="Availability: Immediate Joiner | Open to Relocation Across India & Remote", align="C", new_x="LMARGIN", new_y="NEXT")
+    reg = str(data.get("region", "India")).strip()
+    if reg.lower() == "india" or reg == "" or reg == "nan":
+        avail_text = "Availability: Immediate Joiner | Open to Relocation Across India & Remote"
+    else:
+        avail_text = f"Availability: Immediate Joiner | Open to Immediate Relocation to {reg}"
+    pdf.cell(w=pdf.epw, h=4.8 * scale, text=avail_text, align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.set_text_color(0, 0, 0)
     pdf.ln(sec_gap)
 
@@ -206,6 +211,7 @@ for idx, row in jobs.iterrows():
     os.makedirs(folder, exist_ok=True)
 
     pdf_path = os.path.join(folder, f"Resume_{safe_name}.pdf")
+    result["tailored_resume"]["region"] = region
     save_pdf(result["tailored_resume"], pdf_path)
 
     with open(os.path.join(folder, "cover_note.txt"), "w") as cf:
