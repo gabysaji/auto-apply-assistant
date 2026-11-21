@@ -9,13 +9,13 @@ from google.genai import types
 from fpdf import FPDF
 
 load_dotenv()
-client = genai.Client()
+client = genai.Client(http_options={"timeout": 15000})
 
 LINKEDIN_URL = "https://www.linkedin.com/in/gabysaji"
 GITHUB_URL = "https://github.com/gabysaji"
 MODELS = ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.8-flash"]
 MIN_SCORE = 70
-MAX_JOBS = 15
+MAX_JOBS = 25
 
 with open("my_resume.txt", "r") as f:
     base_resume = f.read()
