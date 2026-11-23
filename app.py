@@ -57,8 +57,9 @@ with st.sidebar:
                 st.text(f.read())
 
 if not os.path.exists("tracker.csv"):
-    st.info("No opportunities in tracker.csv yet. Click '1. Fetch Fresh Jobs' and '2. Score & Tailor Resumes' in the sidebar to begin.")
-else:
+    st.info("No opportunities in tracker.csv yet. Configure your Profile & API Key below, then click '1. Fetch Fresh Jobs' and '2. Score & Tailor Resumes' in the sidebar.")
+    tab_settings = st.container()
+if os.path.exists("tracker.csv"):
     df = pd.read_csv("tracker.csv")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Action Queue", len(df[df["Status"] == "Ready to Submit"]))
@@ -71,7 +72,7 @@ else:
     selected_region = st.selectbox("Region Filter", regions, label_visibility="collapsed")
     scoped_df = df[df["Region"] == selected_region].copy() if (selected_region != "All Regions" and "Region" in df.columns) else df.copy()
 
-    tab_queue, tab_history = st.tabs(["Active Queue (Ready to Submit)", "Submitted & Archive"])
+    tab_queue, tab_history, tab_settings = st.tabs(["Active Queue (Ready to Submit)", "Submitted & Archive", "Profile & API Settings"])
 
     with tab_queue:
         queue_df = scoped_df[scoped_df["Status"] == "Ready to Submit"].copy()
@@ -170,3 +171,32 @@ else:
             if not edited_hist["Status"].equals(hist_df["Status"]):
                 for idx in edited_hist.index: df.at[idx, "Status"] = edited_hist.at[idx, "Status"]
                 df.to_csv("tracker.csv", index=False); st.rerun()
+
+with tab_settings:
+    st.subheader("Profile & API Configuration")
+    st.caption("Save your API key, profile links, and master resume locally. Everything stays private on your machine.")
+
+    env_vars = {}
+    if os.path.exists(".env"):
+        for line in open(".env"):
+            if "=" in line and not line.strip().startswith("#"):
+                k, v = line.strip().split("=", 1)
+                env_vars[k] = v.strip().strip('"').strip("'")
+
+    curr_resume = open("my_resume.txt").read() if os.path.exists("my_resume.txt") else ""
+
+    with st.form("settings_form"):
+        api_key_in = st.text_input("Gemini API Key (Free at ://google.com)", value=env_vars.get("GEMINI_API_KEY", ""), type="password")
+        scol1, scol2 = st.columns(2)
+        li_in = scol1.text_input("LinkedIn Profile URL", value=env_vars.get("LINKEDIN_URL", ""))
+        gh_in = scol2.text_input("GitHub / Portfolio URL", value=env_vars.get("GITHUB_URL", ""))
+        resume_in = st.text_area("Master Resume (Paste plain text)", value=curr_resume, height=320)
+
+        if st.form_submit_button("Save Settings", type="primary"):
+            with open(".env", "w") as ef:
+                ef.write(f'GEMINI_API_KEY="{api_key_in.strip()}"\n')
+                ef.write(f'LINKEDIN_URL="{li_in.strip()}"\n')
+                ef.write(f'GITHUB_URL="{gh_in.strip()}"\n')
+            with open("my_resume.txt", "w") as rf:
+                rf.write(resume_in.strip() + "\n")
+            st.success("Saved! Your API key, profile links, and resume are ready.")
