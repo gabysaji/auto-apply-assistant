@@ -15,6 +15,7 @@ MIN_SCORE = 70
 MAX_JOBS = 25
 
 base_resume = open("my_resume.txt").read()
+extra_exp = open("extra_experience.txt").read().strip() if os.path.exists("extra_experience.txt") else ""
 seen_file = "seen_jobs.txt"
 seen_urls = set(l.strip() for l in open(seen_file) if l.strip()) if os.path.exists(seen_file) else set()
 
@@ -159,7 +160,7 @@ VOICE RULE: "linkedin_note", "recruiter_email", and "cover_letter" MUST be writt
 "recruiter_details": Extract ONLY real recruiter/hiring contact info explicitly written in the JD (Name, Email, Phone number, or LinkedIn URL). If NO contact info or name is mentioned in the JD, return strictly "NONE".
 Return ONLY JSON:
 {{"ats_score": 85, "visa_viable": true, "sponsorship_note": "...", "salary_note": "Avg: [Realistic market range in local currency] | Quote: [Recommended ask for UK MSc + 1yr SOC exp]", "recruiter_details": "...", "linkedin_note": "...", "recruiter_email": "Subject: ...\n\n...", "cover_letter": "...", "tailored_resume": {{"name": "YOUR FULL NAME", "contact": "City, Country | Phone | Email", "summary": "...", "skills": ["..."], "experience": [{{"title": "...", "bullets": ["..."]}}], "education": ["..."]}}}}
---- RESUME ---\n{base_resume}\n--- JD ---\n{jd[:3500]}"""
+OPTIONAL EXTRA EXPERIENCE/PROJECTS BANK (Include ONLY if directly relevant to this specific JD; omit if unrelated):\n{extra_exp[:2000]}\n--- RESUME ---\n{base_resume}\n--- JD ---\n{jd[:3500]}"""
 
     result = analyze_fast(prompt)
     if not result:
