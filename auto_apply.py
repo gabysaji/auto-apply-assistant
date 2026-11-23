@@ -168,7 +168,7 @@ for idx, row in jobs.iterrows():
 
     print(f"[{idx + 1}/{len(jobs)}] {title} at {company}...", end=" ", flush=True)
     prompt = f"""
-    Compare this Resume against the Job Description. Never invent fake experience or tools.
+    Compare this Resume against the Job Description. Never invent fake experience or tools. Target 0-5 year individual contributor roles: keep Senior technical roles if they require <= 5 years, but cap ats_score at 50 if the JD strictly requires 6+ years of experience or managing a team.
     Preserve ALL experience roles, projects, certifications, and detailed technical bullets from the original resume while tailoring keywords to match the JD.
     Return ONLY valid JSON:
     {{
