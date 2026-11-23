@@ -172,9 +172,10 @@ if os.path.exists("tracker.csv"):
                 for idx in edited_hist.index: df.at[idx, "Status"] = edited_hist.at[idx, "Status"]
                 df.to_csv("tracker.csv", index=False); st.rerun()
 
+
 with tab_settings:
     st.subheader("Profile & API Configuration")
-    st.caption("Save your API key, profile links, and master resume locally. Everything stays private on your machine.")
+    st.caption("Save your Gemini API key, profile links, and master resume locally. Everything stays private on your machine.")
 
     env_vars = {}
     if os.path.exists(".env"):
