@@ -8,8 +8,8 @@ from fpdf import FPDF
 load_dotenv()
 client = genai.Client(http_options={"timeout": 15000})
 
-LINKEDIN_URL = "https://linkedin.com"
-GITHUB_URL = "https://github.com"
+LINKEDIN_URL = "os.getenv("LINKEDIN_URL", "https://linkedin.com")"
+GITHUB_URL = "os.getenv("GITHUB_URL", "https://github.com")"
 MODELS = ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.8-flash"]
 MIN_SCORE = 70
 MAX_JOBS = 25
@@ -38,7 +38,7 @@ def render_with_scale(data, scale):
         pdf.multi_cell(w=pdf.epw, h=h, text=clean(text), new_x="LMARGIN", new_y="NEXT")
 
     pdf.set_font("Helvetica", "B", 17 * scale)
-    pdf.cell(w=pdf.epw, h=7.5 * scale, text=clean(data.get("name", "GABY SAJI")), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(w=pdf.epw, h=7.5 * scale, text=clean(data.get("name", "YOUR FULL NAME")), align="C", new_x="LMARGIN", new_y="NEXT")
 
     pdf.set_font("Helvetica", "", 9.2 * scale)
     pdf.set_text_color(60, 60, 60)
@@ -97,11 +97,11 @@ def save_cover_letter_pdf(letter_text, region, filepath):
     pdf.set_auto_page_break(auto=True, margin=15)
 
     pdf.set_font("Helvetica", "B", 16)
-    pdf.cell(w=pdf.epw, h=7.5, text="GABY SAJI", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(w=pdf.epw, h=7.5, text="YOUR FULL NAME", align="C", new_x="LMARGIN", new_y="NEXT")
 
     pdf.set_font("Helvetica", "", 9.2)
     pdf.set_text_color(60, 60, 60)
-    cb = "Kerala, India | (+91) 9447518866 | gabysajithomas@outlook.com"
+    cb = "City, Country | Phone | Email"
     bw, lw, sw, gw = pdf.get_string_width(cb + " | "), pdf.get_string_width("LinkedIn"), pdf.get_string_width(" | "), pdf.get_string_width("GitHub")
     pdf.set_x((pdf.w - (bw + lw + sw + gw)) / 2)
     pdf.cell(w=bw, h=5, text=cb + " | ")
@@ -154,11 +154,11 @@ for idx, row in jobs.iterrows():
     prompt = f"""Compare Resume vs JD for an Indian candidate (UK MSc Cyber Security, immediate joiner). Target: {region} ({loc}).
 Never invent fake experience/tools. Keep 0-5 yr individual contributor roles (including Senior technical roles <= 5 yrs), cap ats_score at 50 if 6+ yrs management is required.
 Keep ALL roles by default (visa_viable=true), including silent sponsorship. Set visa_viable=false ONLY if JD explicitly says "no sponsorship", "citizens/nationals only", or mandatory C1 local language.
-VOICE RULE: "linkedin_note", "recruiter_email", and "cover_letter" MUST be written in FIRST PERSON ("I", "my", "me") as Gaby Saji—NEVER third person.
+VOICE RULE: "linkedin_note", "recruiter_email", and "cover_letter" MUST be written in FIRST PERSON ("I", "my", "me") as the candidate—NEVER third person.
 "linkedin_note" MUST be strictly under 275 characters for a free LinkedIn connection note.
 "recruiter_details": Extract ONLY real recruiter/hiring contact info explicitly written in the JD (Name, Email, Phone number, or LinkedIn URL). If NO contact info or name is mentioned in the JD, return strictly "NONE".
 Return ONLY JSON:
-{{"ats_score": 85, "visa_viable": true, "sponsorship_note": "...", "salary_note": "Avg: [Realistic market range in local currency] | Quote: [Recommended ask for UK MSc + 1yr SOC exp]", "recruiter_details": "...", "linkedin_note": "...", "recruiter_email": "Subject: ...\n\n...", "cover_letter": "...", "tailored_resume": {{"name": "GABY SAJI", "contact": "Kerala, India | (+91) 9447518866 | gabysajithomas@outlook.com", "summary": "...", "skills": ["..."], "experience": [{{"title": "...", "bullets": ["..."]}}], "education": ["..."]}}}}
+{{"ats_score": 85, "visa_viable": true, "sponsorship_note": "...", "salary_note": "Avg: [Realistic market range in local currency] | Quote: [Recommended ask for UK MSc + 1yr SOC exp]", "recruiter_details": "...", "linkedin_note": "...", "recruiter_email": "Subject: ...\n\n...", "cover_letter": "...", "tailored_resume": {{"name": "YOUR FULL NAME", "contact": "City, Country | Phone | Email", "summary": "...", "skills": ["..."], "experience": [{{"title": "...", "bullets": ["..."]}}], "education": ["..."]}}}}
 --- RESUME ---\n{base_resume}\n--- JD ---\n{jd[:3500]}"""
 
     result = analyze_fast(prompt)
