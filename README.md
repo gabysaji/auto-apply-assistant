@@ -1,5 +1,7 @@
 # Auto-Apply Assistant
 
+![Auto-Apply Assistant Dashboard](assets/dashboard.png)
+
 A lightweight, human-in-the-loop AI job application command center built in Python and Streamlit. It fetches international roles, scores them via the Google Gemini API, generates tailored single-page resumes and cover letters, drafts outreach notes, and tracks everything in a visual dashboard.
 
 ## Key Features
