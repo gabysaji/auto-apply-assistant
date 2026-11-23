@@ -3,3 +3,4 @@ python-dotenv
 fpdf2
 python-jobspy
 pandas
+streamlit

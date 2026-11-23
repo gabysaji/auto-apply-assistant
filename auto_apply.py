@@ -1,7 +1,4 @@
-import os
-import re
-import time
-import json
+import os, re, time, json
 import pandas as pd
 from dotenv import load_dotenv
 from google import genai
@@ -11,20 +8,15 @@ from fpdf import FPDF
 load_dotenv()
 client = genai.Client(http_options={"timeout": 15000})
 
-LINKEDIN_URL = "https://www.linkedin.com/in/gabysaji"
-GITHUB_URL = "https://github.com/gabysaji"
+LINKEDIN_URL = "https://linkedin.com"
+GITHUB_URL = "https://github.com"
 MODELS = ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.8-flash"]
 MIN_SCORE = 70
 MAX_JOBS = 25
 
-with open("my_resume.txt", "r") as f:
-    base_resume = f.read()
-
+base_resume = open("my_resume.txt").read()
 seen_file = "seen_jobs.txt"
-seen_urls = set()
-if os.path.exists(seen_file):
-    with open(seen_file, "r") as sf:
-        seen_urls = set(line.strip() for line in sf if line.strip())
+seen_urls = set(l.strip() for l in open(seen_file) if l.strip()) if os.path.exists(seen_file) else set()
 
 raw_jobs = pd.read_csv("jobs.csv")
 jobs = raw_jobs[~raw_jobs["job_url"].isin(seen_urls)].head(MAX_JOBS)
@@ -36,211 +28,176 @@ def clean(text):
 
 def render_with_scale(data, scale):
     pdf = FPDF()
-    margin = 12 * scale
-    pdf.set_margins(12, margin, 12)
+    pdf.set_margins(12, 12 * scale, 12)
     pdf.add_page()
     pdf.set_auto_page_break(auto=False)
+    bf, lh, sg = 9.5 * scale, 4.6 * scale, 2.8 * scale
 
-    body_font = 9.5 * scale
-    line_h = 4.6 * scale
-    sec_gap = 2.8 * scale
-
-    def write_block(text, h=line_h):
+    def wb(text, h=lh):
         pdf.set_x(pdf.l_margin)
         pdf.multi_cell(w=pdf.epw, h=h, text=clean(text), new_x="LMARGIN", new_y="NEXT")
 
-    # Name Header
     pdf.set_font("Helvetica", "B", 17 * scale)
     pdf.cell(w=pdf.epw, h=7.5 * scale, text=clean(data.get("name", "GABY SAJI")), align="C", new_x="LMARGIN", new_y="NEXT")
 
-    # Contact Line + Clickable LinkedIn & GitHub
     pdf.set_font("Helvetica", "", 9.2 * scale)
     pdf.set_text_color(60, 60, 60)
-    contact_base = clean(data.get("contact", "Kerala, India | (+91) 9447518866 | gabysajithomas@outlook.com"))
-    base_w = pdf.get_string_width(contact_base + " | ")
-    li_w = pdf.get_string_width("LinkedIn")
-    sep_w = pdf.get_string_width(" | ")
-    gh_w = pdf.get_string_width("GitHub")
-    total_w = base_w + li_w + sep_w + gh_w
+    cb = clean(data.get("contact", "City, Country | Phone | Email"))
+    bw, lw, sw, gw = pdf.get_string_width(cb + " | "), pdf.get_string_width("LinkedIn"), pdf.get_string_width(" | "), pdf.get_string_width("GitHub")
+    pdf.set_x((pdf.w - (bw + lw + sw + gw)) / 2)
+    pdf.cell(w=bw, h=5 * scale, text=cb + " | ")
+    pdf.set_text_color(15, 80, 160); pdf.set_font("Helvetica", "U", 9.2 * scale)
+    pdf.cell(w=lw, h=5 * scale, text="LinkedIn", link=LINKEDIN_URL)
+    pdf.set_text_color(60, 60, 60); pdf.set_font("Helvetica", "", 9.2 * scale)
+    pdf.cell(w=sw, h=5 * scale, text=" | ")
+    pdf.set_text_color(15, 80, 160); pdf.set_font("Helvetica", "U", 9.2 * scale)
+    pdf.cell(w=gw, h=5 * scale, text="GitHub", link=GITHUB_URL, new_x="LMARGIN", new_y="NEXT")
 
-    pdf.set_x((pdf.w - total_w) / 2)
-    pdf.cell(w=base_w, h=5 * scale, text=contact_base + " | ")
-    pdf.set_text_color(15, 80, 160)
-    pdf.set_font("Helvetica", "U", 9.2 * scale)
-    pdf.cell(w=li_w, h=5 * scale, text="LinkedIn", link=LINKEDIN_URL)
-    pdf.set_text_color(60, 60, 60)
-    pdf.set_font("Helvetica", "", 9.2 * scale)
-    pdf.cell(w=sep_w, h=5 * scale, text=" | ")
-    pdf.set_text_color(15, 80, 160)
-    pdf.set_font("Helvetica", "U", 9.2 * scale)
-    pdf.cell(w=gh_w, h=5 * scale, text="GitHub", link=GITHUB_URL, new_x="LMARGIN", new_y="NEXT")
-
-    # Availability Line
-    pdf.set_text_color(40, 40, 40)
-    pdf.set_font("Helvetica", "I", 8.8 * scale)
+    pdf.set_text_color(40, 40, 40); pdf.set_font("Helvetica", "I", 8.8 * scale)
     reg = str(data.get("region", "India")).strip()
-    if reg.lower() == "india" or reg == "" or reg == "nan":
-        avail_text = "Availability: Immediate Joiner | Open to Relocation Across India & Remote"
-    else:
-        avail_text = f"Availability: Immediate Joiner | Open to Immediate Relocation to {reg}"
-    pdf.cell(w=pdf.epw, h=4.8 * scale, text=avail_text, align="C", new_x="LMARGIN", new_y="NEXT")
-    pdf.set_text_color(0, 0, 0)
-    pdf.ln(sec_gap)
+    avail = "Availability: Immediate Joiner | Open to Relocation Across India & Remote" if reg.lower() in ("india", "", "nan") else f"Availability: Immediate Joiner | Open to Immediate Relocation to {reg}"
+    pdf.cell(w=pdf.epw, h=4.8 * scale, text=avail, align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_text_color(0, 0, 0); pdf.ln(sg)
 
-    def header(title):
-        pdf.set_x(pdf.l_margin)
-        pdf.set_font("Helvetica", "B", 10.2 * scale)
-        pdf.set_text_color(20, 50, 90)
-        pdf.cell(w=pdf.epw, h=5.5 * scale, text=clean(title.upper()), new_x="LMARGIN", new_y="NEXT")
-        pdf.set_draw_color(20, 50, 90)
-        pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
-        pdf.set_text_color(0, 0, 0)
-        pdf.ln(1.8 * scale)
+    def hdr(t):
+        pdf.set_x(pdf.l_margin); pdf.set_font("Helvetica", "B", 10.2 * scale); pdf.set_text_color(20, 50, 90)
+        pdf.cell(w=pdf.epw, h=5.5 * scale, text=clean(t.upper()), new_x="LMARGIN", new_y="NEXT")
+        pdf.set_draw_color(20, 50, 90); pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+        pdf.set_text_color(0, 0, 0); pdf.ln(1.8 * scale)
 
     if data.get("summary"):
-        header("Professional Summary")
-        pdf.set_font("Helvetica", "", body_font)
-        write_block(data["summary"])
-        pdf.ln(sec_gap)
-
+        hdr("Professional Summary"); pdf.set_font("Helvetica", "", bf); wb(data["summary"]); pdf.ln(sg)
     if data.get("skills"):
-        header("Technical & Compliance Core Skills")
-        pdf.set_font("Helvetica", "", body_font)
-        for s in data["skills"]:
-            write_block(s)
-        pdf.ln(sec_gap)
-
+        hdr("Technical & Compliance Core Skills"); pdf.set_font("Helvetica", "", bf)
+        for s in data["skills"]: wb(s)
+        pdf.ln(sg)
     if data.get("experience"):
-        header("Professional Experience & Security Engineering")
+        hdr("Professional Experience & Security Engineering")
         for exp in data["experience"]:
-            pdf.set_font("Helvetica", "B", 9.8 * scale)
-            write_block(exp.get("title", ""), h=5.0 * scale)
-            pdf.set_font("Helvetica", "", body_font)
-            for b in exp.get("bullets", []):
-                write_block(f"  - {b}")
+            pdf.set_font("Helvetica", "B", 9.8 * scale); wb(exp.get("title", ""), h=5.0 * scale)
+            pdf.set_font("Helvetica", "", bf)
+            for b in exp.get("bullets", []): wb(f"  - {b}")
             pdf.ln(1.8 * scale)
-
     if data.get("education"):
-        header("Education, Certifications & Academic Projects")
-        pdf.set_font("Helvetica", "", body_font)
-        for item in data["education"]:
-            write_block(f"  - {item}")
-
+        hdr("Education, Certifications & Academic Projects"); pdf.set_font("Helvetica", "", bf)
+        for item in data["education"]: wb(f"  - {item}")
     return pdf
 
 def save_pdf(data, filepath):
-    # Try scales from spacious (1.14) down to compact (0.85) to fill ~93% of 1 page
-    chosen_pdf = None
-    for s in [1.14, 1.10, 1.06, 1.02, 0.98, 0.94, 0.90, 0.86]:
-        candidate = render_with_scale(data, s)
-        if candidate.get_y() <= 283:
-            chosen_pdf = candidate
+    for s in [1.14, 1.10, 1.06, 1.02, 0.98, 0.94, 0.90, 0.86, 0.84]:
+        cand = render_with_scale(data, s)
+        if cand.get_y() <= 283 or s == 0.84:
+            cand.output(filepath)
             break
-    if chosen_pdf is None:
-        chosen_pdf = render_with_scale(data, 0.84)
-    chosen_pdf.output(filepath)
+
+def save_cover_letter_pdf(letter_text, region, filepath):
+    pdf = FPDF()
+    pdf.set_margins(16, 16, 16)
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.cell(w=pdf.epw, h=7.5, text="GABY SAJI", align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.set_font("Helvetica", "", 9.2)
+    pdf.set_text_color(60, 60, 60)
+    cb = "Kerala, India | (+91) 9447518866 | gabysajithomas@outlook.com"
+    bw, lw, sw, gw = pdf.get_string_width(cb + " | "), pdf.get_string_width("LinkedIn"), pdf.get_string_width(" | "), pdf.get_string_width("GitHub")
+    pdf.set_x((pdf.w - (bw + lw + sw + gw)) / 2)
+    pdf.cell(w=bw, h=5, text=cb + " | ")
+    pdf.set_text_color(15, 80, 160); pdf.set_font("Helvetica", "U", 9.2)
+    pdf.cell(w=lw, h=5, text="LinkedIn", link=LINKEDIN_URL)
+    pdf.set_text_color(60, 60, 60); pdf.set_font("Helvetica", "", 9.2)
+    pdf.cell(w=sw, h=5, text=" | ")
+    pdf.set_text_color(15, 80, 160); pdf.set_font("Helvetica", "U", 9.2)
+    pdf.cell(w=gw, h=5, text="GitHub", link=GITHUB_URL, new_x="LMARGIN", new_y="NEXT")
+
+    pdf.set_text_color(40, 40, 40); pdf.set_font("Helvetica", "I", 8.8)
+    reg = str(region).strip()
+    avail = "Availability: Immediate Joiner | Open to Relocation Across India & Remote" if reg.lower() in ("india", "", "nan") else f"Availability: Immediate Joiner | Open to Immediate Relocation to {reg}"
+    pdf.cell(w=pdf.epw, h=4.8, text=avail, align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.set_draw_color(20, 50, 90)
+    pdf.ln(2)
+    pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(8)
+
+    pdf.set_font("Helvetica", "", 10.5)
+    for para in str(letter_text).split("\n"):
+        line = clean(para)
+        if line:
+            pdf.set_x(pdf.l_margin)
+            pdf.multi_cell(w=pdf.epw, h=5.5, text=line, new_x="LMARGIN", new_y="NEXT")
+            pdf.ln(3)
+
+    pdf.output(filepath)
 
 def analyze_fast(prompt):
-    for model_name in MODELS:
+    for m in MODELS:
         try:
-            res = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(response_mime_type="application/json"),
-            )
+            res = client.models.generate_content(model=m, contents=prompt, config=types.GenerateContentConfig(response_mime_type="application/json"))
             return json.loads(res.text)
         except Exception:
             time.sleep(0.5)
     return None
 
-print(f"Fast-scanning top {len(jobs)} jobs (ATS >= {MIN_SCORE}%)...\n")
+print(f"Fast-scanning {len(jobs)} new jobs (ATS >= {MIN_SCORE}%)...\n")
 
 for idx, row in jobs.iterrows():
-    title = str(row.get("title", "Role"))
-    company = str(row.get("company", "Company"))
-    url = str(row.get("job_url", ""))
-    jd = str(row.get("description", ""))
-    loc = str(row.get("location", "India"))
-    region = str(row.get("target_region", "India"))
+    title, company = str(row.get("title", "Role")), str(row.get("company", "Company"))
+    url, jd = str(row.get("job_url", "")), str(row.get("description", ""))
+    loc, region = str(row.get("location", "India")), str(row.get("target_region", "India"))
+    if not jd or jd == "nan": continue
 
-    if not jd or jd == "nan":
-        continue
-
-    print(f"[{idx + 1}/{len(jobs)}] {title} at {company}...", end=" ", flush=True)
-    prompt = f"""
-    Compare this Resume against the Job Description. Never invent fake experience or tools. Target 0-5 year individual contributor roles: keep Senior technical roles if they require <= 5 years, but cap ats_score at 50 if the JD strictly requires 6+ years of experience or managing a team.
-    Preserve ALL experience roles, projects, certifications, and detailed technical bullets from the original resume while tailoring keywords to match the JD.
-    Return ONLY valid JSON:
-    {{
-      "ats_score": 85,
-      "cover_note": "3-sentence human recruiter message explaining fit",
-      "tailored_resume": {{
-        "name": "GABY SAJI",
-        "contact": "Kerala, India | (+91) 9447518866 | gabysajithomas@outlook.com",
-        "summary": "3-4 sentence tailored summary",
-        "skills": ["Category: detailed skill list"],
-        "experience": [{{"title": "Company | Role | Dates", "bullets": ["Detailed bullet with metrics and tools"]}}],
-        "education": ["Degree / Certification / Dissertation line"]
-      }}
-    }}
-    --- RESUME ---
-    {base_resume}
-    --- JOB DESCRIPTION ---
-    {jd[:3500]}
-    """
+    print(f"[{idx + 1}] {title} at {company} ({region})...", end=" ", flush=True)
+    prompt = f"""Compare Resume vs JD for an Indian candidate (UK MSc Cyber Security, immediate joiner). Target: {region} ({loc}).
+Never invent fake experience/tools. Keep 0-5 yr individual contributor roles (including Senior technical roles <= 5 yrs), cap ats_score at 50 if 6+ yrs management is required.
+Keep ALL roles by default (visa_viable=true), including silent sponsorship. Set visa_viable=false ONLY if JD explicitly says "no sponsorship", "citizens/nationals only", or mandatory C1 local language.
+VOICE RULE: "linkedin_note", "recruiter_email", and "cover_letter" MUST be written in FIRST PERSON ("I", "my", "me") as Gaby Saji—NEVER third person.
+"linkedin_note" MUST be strictly under 275 characters for a free LinkedIn connection note.
+"recruiter_details": Extract ONLY real recruiter/hiring contact info explicitly written in the JD (Name, Email, Phone number, or LinkedIn URL). If NO contact info or name is mentioned in the JD, return strictly "NONE".
+Return ONLY JSON:
+{{"ats_score": 85, "visa_viable": true, "sponsorship_note": "...", "salary_note": "Avg: [Realistic market range in local currency] | Quote: [Recommended ask for UK MSc + 1yr SOC exp]", "recruiter_details": "...", "linkedin_note": "...", "recruiter_email": "Subject: ...\n\n...", "cover_letter": "...", "tailored_resume": {{"name": "GABY SAJI", "contact": "Kerala, India | (+91) 9447518866 | gabysajithomas@outlook.com", "summary": "...", "skills": ["..."], "experience": [{{"title": "...", "bullets": ["..."]}}], "education": ["..."]}}}}
+--- RESUME ---\n{base_resume}\n--- JD ---\n{jd[:3500]}"""
 
     result = analyze_fast(prompt)
     if not result:
-        print("Skipped (API busy)")
-        continue
+        print("Skipped (API busy)"); continue
 
-    score = result.get("ats_score", 0)
-    visa_ok = result.get("visa_viable", True)
-    visa_note = result.get("sponsorship_note", "N/A")
-    sal_note = result.get("salary_note", "Not listed")
-
+    score, visa_ok = result.get("ats_score", 0), result.get("visa_viable", True)
     if score < MIN_SCORE or not visa_ok:
-        with open(seen_file, "a") as sf:
-            sf.write(url + "\n")
-        reason = "No Sponsorship/Local Only" if not visa_ok else "Below Threshold"
-        print(f"{score}% ({reason} - Skipped)")
-        continue
+        open(seen_file, "a").write(url + "\n")
+        print(f"{score}% (Skipped)"); continue
 
     safe_name = re.sub(r"[^a-zA-Z0-9]+", "_", f"{company}_{title}")[:40]
     folder = os.path.join("applications", safe_name)
     os.makedirs(folder, exist_ok=True)
-
     pdf_path = os.path.join(folder, f"Resume_{safe_name}.pdf")
     result["tailored_resume"]["region"] = region
     save_pdf(result["tailored_resume"], pdf_path)
 
-    with open(os.path.join(folder, "cover_note.txt"), "w") as cf:
-        cf.write(result.get("cover_note", ""))
+    li_note = result.get("linkedin_note", "").strip()
+    if len(li_note) > 280:
+        li_note = li_note[:277].rsplit(" ", 1) + "..."
 
-    tracker_rows.append({
-        "ATS_Score": score,
-        "Region": region,
-        "Location": loc,
-        "Company": company,
-        "Role": title,
-        "Sponsorship": visa_note,
-        "Salary_Info": sal_note,
-        "Resume_PDF": pdf_path,
-        "Apply_URL": url,
-        "Status": "Ready to Submit"
-    })
-    with open(seen_file, "a") as sf:
-        sf.write(url + "\n")
+    open(os.path.join(folder, "linkedin_note.txt"), "w").write(li_note)
+    open(os.path.join(folder, "recruiter_email.txt"), "w").write(result.get("recruiter_email", "").strip())
+    cl_text = result.get("cover_letter", "").strip()
+    open(os.path.join(folder, "cover_letter.txt"), "w").write(cl_text)
+    cl_pdf_path = os.path.join(folder, f"Cover_Letter_{safe_name}.pdf")
+    save_cover_letter_pdf(cl_text, region, cl_pdf_path)
+    open(os.path.join(folder, "recruiter_info.txt"), "w").write(result.get("recruiter_details", "").strip())
+
+    tracker_rows.append({"ATS_Score": score, "Region": region, "Location": loc, "Company": company, "Role": title, "Sponsorship": result.get("sponsorship_note", "N/A"), "Salary_Info": result.get("salary_note", "Not listed"), "Resume_PDF": pdf_path, "Apply_URL": url, "Status": "Ready to Submit"})
+    open(seen_file, "a").write(url + "\n")
     print(f"{score}% -> Saved!")
 
 if tracker_rows:
     new_df = pd.DataFrame(tracker_rows)
-    if os.path.exists("tracker.csv"):
-        old_df = pd.read_csv("tracker.csv")
-        df_out = pd.concat([old_df, new_df], ignore_index=True).drop_duplicates(subset=["Apply_URL"])
-    else:
-        df_out = new_df
-    df_out = df_out.sort_values(by="ATS_Score", ascending=False)
-    df_out.to_csv("tracker.csv", index=False)
+    df_out = pd.concat([pd.read_csv("tracker.csv"), new_df], ignore_index=True).drop_duplicates(subset=["Apply_URL"]) if os.path.exists("tracker.csv") else new_df
+    df_out.sort_values(by="ATS_Score", ascending=False).to_csv("tracker.csv", index=False)
     open(seen_file, "w").writelines(open(seen_file).readlines()[-500:])
-    print(f"\nDone in seconds! Saved {len(df_out)} balanced 1-page packets to tracker.csv.")
+    print(f"\nDone! Saved {len(new_df)} complete first-person application packets.")
+else:
+    print("\nDone! No new roles met the threshold.")
