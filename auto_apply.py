@@ -52,7 +52,7 @@ def render_with_scale(data, scale):
 
     pdf.set_font("Helvetica", "", 9.2 * scale)
     pdf.set_text_color(60, 60, 60)
-    cb = clean(data.get("contact", "City, Country | Phone | Email"))
+    cb = " | ".join([x.strip() for x in clean(data.get("contact", "")).split("|") if x.strip() and "linkedin" not in x.lower() and "github" not in x.lower()])
     bw, lw, sw, gw = pdf.get_string_width(cb + " | "), pdf.get_string_width("LinkedIn"), pdf.get_string_width(" | "), pdf.get_string_width("GitHub")
     pdf.set_x((pdf.w - (bw + lw + sw + gw)) / 2)
     pdf.cell(w=bw, h=5 * scale, text=cb + " | ")
