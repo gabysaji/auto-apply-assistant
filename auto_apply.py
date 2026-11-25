@@ -153,7 +153,12 @@ for idx, row in jobs.iterrows():
 
     print(f"[{idx + 1}] {title} at {company} ({region})...", end=" ", flush=True)
     prompt = f"""Compare Resume vs JD for an Indian candidate (UK MSc Cyber Security, immediate joiner). Target: {region} ({loc}).
-Never invent fake experience/tools. Keep 0-5 yr individual contributor roles (including Senior technical roles <= 5 yrs), cap ats_score at 50 if 6+ yrs management is required.
+Never invent fake experience/tools.
+EXPERIENCE-STAGE PRIORITY RULE:
+1. First assess the candidate's actual years of full-time vs. internship/academic experience from their resume (e.g., if the resume shows mainly internships/academic projects, treat them as an Entry-Level / Early-Career candidate).
+2. PRIORITIZE Entry-Level, Graduate, Associate, Junior, and 0-3 year roles (score 85-98% when skills align) so they rank at the very top of the queue.
+3. Still KEEP 3-5 year mid-level individual contributor roles if technical skills match well, scoring them in the 72-82% range so they appear right below entry/early-mid priority roles.
+4. Cap ats_score at 55 if the JD strictly demands 6+ years of full-time experience or people management.
 Keep ALL roles by default (visa_viable=true), including silent sponsorship. Set visa_viable=false ONLY if JD explicitly says "no sponsorship", "citizens/nationals only", or mandatory C1 local language.
 VOICE RULE: "linkedin_note", "recruiter_email", and "cover_letter" MUST be written in FIRST PERSON ("I", "my", "me") as the candidate—NEVER third person.
 "linkedin_note" MUST be strictly under 275 characters for a free LinkedIn connection note.
