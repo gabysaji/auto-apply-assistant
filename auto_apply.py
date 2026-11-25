@@ -153,7 +153,7 @@ for idx, row in jobs.iterrows():
 
     print(f"[{idx + 1}] {title} at {company} ({region})...", end=" ", flush=True)
     prompt = f"""Compare Resume vs JD for an Indian candidate (UK MSc Cyber Security, immediate joiner). Target: {region} ({loc}).
-Never invent fake experience/tools.
+Never invent fake experience/tools. ALWAYS preserve exact employment start and end dates from the candidate's resume in every experience title.
 DYNAMIC EXPERIENCE-STAGE RULE (Adapts to ANY candidate's resume):
 1. First calculate the candidate's actual years of full-time experience (Y) from their resume (counting internships/academic work as ~0-1 yr Entry-Level).
 2. PRIORITY MATCH (85-98%): Roles matching the candidate's actual career stage (e.g., if Y <= 2, prioritize Entry-Level, Graduate, Associate & 0-3 yr roles; if Y = 10, prioritize Senior, Staff, Principal & 7-12 yr roles).
