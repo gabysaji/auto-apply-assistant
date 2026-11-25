@@ -44,8 +44,6 @@ with st.sidebar:
         st.success("Pipeline complete! Refreshing dashboard...")
         with st.expander("View Run Logs"):
             st.code((res1.stdout or res1.stderr) + "\n---\n" + (res2.stdout or res2.stderr))
-        st.rerun()
-            st.rerun()
 
     st.divider()
     if os.path.exists("my_resume.txt"):
