@@ -88,7 +88,7 @@ def render_with_scale(data, scale):
             parts = [x.strip() for x in raw_t.split("|")]
             pdf.set_x(pdf.l_margin)
             if len(parts) >= 3:
-                role_t, comp_t, right_d = parts, parts, " | ".join(parts[2:])
+                role_t = parts.pop(0); comp_t = parts.pop(0); right_d = " | ".join(parts)
                 pdf.set_font("Helvetica", "B", 9.8 * scale)
                 wb(role_t, h=4.8 * scale)
                 pdf.set_x(pdf.l_margin)
@@ -97,7 +97,7 @@ def render_with_scale(data, scale):
                 pdf.cell(w=pdf.epw - dw, h=4.6 * scale, text=comp_t)
                 pdf.cell(w=dw, h=4.6 * scale, text=right_d, align="R", new_x="LMARGIN", new_y="NEXT")
             elif len(parts) == 2:
-                left_t, right_d = parts, parts
+                left_t = parts.pop(0); right_d = parts.pop(0)
                 pdf.set_font("Helvetica", "B", 9.8 * scale)
                 dw = pdf.get_string_width(right_d) + 2
                 if pdf.get_string_width(left_t) + dw > pdf.epw:
