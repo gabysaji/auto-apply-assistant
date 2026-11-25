@@ -154,11 +154,11 @@ for idx, row in jobs.iterrows():
     print(f"[{idx + 1}] {title} at {company} ({region})...", end=" ", flush=True)
     prompt = f"""Compare Resume vs JD for an Indian candidate (UK MSc Cyber Security, immediate joiner). Target: {region} ({loc}).
 Never invent fake experience/tools.
-EXPERIENCE-STAGE PRIORITY RULE:
-1. First assess the candidate's actual years of full-time vs. internship/academic experience from their resume (e.g., if the resume shows mainly internships/academic projects, treat them as an Entry-Level / Early-Career candidate).
-2. PRIORITIZE Entry-Level, Graduate, Associate, Junior, and 0-3 year roles (score 85-98% when skills align) so they rank at the very top of the queue.
-3. Still KEEP 3-5 year mid-level individual contributor roles if technical skills match well, scoring them in the 72-82% range so they appear right below entry/early-mid priority roles.
-4. Cap ats_score at 55 if the JD strictly demands 6+ years of full-time experience or people management.
+DYNAMIC EXPERIENCE-STAGE RULE (Adapts to ANY candidate's resume):
+1. First calculate the candidate's actual years of full-time experience (Y) from their resume (counting internships/academic work as ~0-1 yr Entry-Level).
+2. PRIORITY MATCH (85-98%): Roles matching the candidate's actual career stage (e.g., if Y <= 2, prioritize Entry-Level, Graduate, Associate & 0-3 yr roles; if Y = 10, prioritize Senior, Staff, Principal & 7-12 yr roles).
+3. STRETCH MATCH (72-82%): Roles up to 2-4 years above or slightly below their level when technical skills align strongly, so they still appear in the queue ranked just below priority matches.
+4. MISMATCH CAP (55%): Cap ats_score at 55 ONLY if the role is grossly mismatched to the candidate's resume (e.g., requiring 5+ years MORE than the candidate actually has, or an entry-level internship for a 10-year veteran).
 Keep ALL roles by default (visa_viable=true), including silent sponsorship. Set visa_viable=false ONLY if JD explicitly says "no sponsorship", "citizens/nationals only", or mandatory C1 local language.
 VOICE RULE: "linkedin_note", "recruiter_email", and "cover_letter" MUST be written in FIRST PERSON ("I", "my", "me") as the candidate—NEVER third person.
 "linkedin_note" MUST be strictly under 275 characters for a free LinkedIn connection note.
