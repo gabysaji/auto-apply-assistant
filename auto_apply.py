@@ -78,7 +78,23 @@ def render_with_scale(data, scale):
     if data.get("experience"):
         hdr("Professional Experience & Security Engineering")
         for exp in data["experience"]:
-            pdf.set_font("Helvetica", "B", 9.8 * scale); wb(exp.get("title", ""), h=5.0 * scale)
+            raw_t = clean(exp.get("title", ""))
+            parts = [x.strip() for x in raw_t.split("|")]
+            if len(parts) >= 3:
+                left_t, right_d = " | ".join(parts[:-1]), parts[-1]
+            elif len(parts) == 2:
+                left_t, right_d = parts, parts
+            else:
+                left_t, right_d = raw_t, ""
+            pdf.set_x(pdf.l_margin)
+            pdf.set_font("Helvetica", "B", 9.8 * scale)
+            if right_d:
+                dw = pdf.get_string_width(right_d) + 2
+                pdf.cell(w=pdf.epw - dw, h=5.0 * scale, text=left_t)
+                pdf.set_font("Helvetica", "I", 9.2 * scale)
+                pdf.cell(w=dw, h=5.0 * scale, text=right_d, align="R", new_x="LMARGIN", new_y="NEXT")
+            else:
+                wb(left_t, h=5.0 * scale)
             pdf.set_font("Helvetica", "", bf)
             for b in exp.get("bullets", []): wb(f"  - {b}")
             pdf.ln(1.8 * scale)
@@ -179,10 +195,12 @@ OPTIONAL EXTRA EXPERIENCE/PROJECTS BANK (Include ONLY if directly relevant to th
         open(seen_file, "a").write(url + "\n")
         print(f"{score}% (Skipped)"); continue
 
-    safe_name = re.sub(r"[^a-zA-Z0-9]+", "_", f"{company}_{title}")[:40]
-    folder = os.path.join("applications", safe_name)
+    cand_clean = re.sub(r"[^a-zA-Z0-9]+", "_", clean(result["tailored_resume"].get("name", "Candidate"))).strip("_")
+    role_clean = re.sub(r"[^a-zA-Z0-9]+", "_", title).strip("_")[:30]
+    folder_slug = re.sub(r"[^a-zA-Z0-9]+", "_", f"{company}_{title}").strip("_")[:40]
+    folder = os.path.join("applications", folder_slug)
     os.makedirs(folder, exist_ok=True)
-    pdf_path = os.path.join(folder, f"Resume_{safe_name}.pdf")
+    pdf_path = os.path.join(folder, f"{cand_clean}_{role_clean}_Resume.pdf")
     result["tailored_resume"]["region"] = region
     save_pdf(result["tailored_resume"], pdf_path)
 
@@ -194,7 +212,7 @@ OPTIONAL EXTRA EXPERIENCE/PROJECTS BANK (Include ONLY if directly relevant to th
     open(os.path.join(folder, "recruiter_email.txt"), "w").write(result.get("recruiter_email", "").strip())
     cl_text = result.get("cover_letter", "").strip()
     open(os.path.join(folder, "cover_letter.txt"), "w").write(cl_text)
-    cl_pdf_path = os.path.join(folder, f"Cover_Letter_{safe_name}.pdf")
+    cl_pdf_path = os.path.join(folder, f"{cand_clean}_{role_clean}_Cover_Letter.pdf")
     save_cover_letter_pdf(cl_text, region, cl_pdf_path)
     open(os.path.join(folder, "recruiter_info.txt"), "w").write(result.get("recruiter_details", "").strip())
 

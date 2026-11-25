@@ -137,7 +137,7 @@ else:
                     st.text_area("Recruiter Email", value=open(em_path).read().strip(), height=260, label_visibility="collapsed", key=f"em_{chosen_idx}") if os.path.exists(em_path) else st.info("Run '2. Score & Tailor Resumes' to generate recruiter email.")
                 with t_cl:
                     cl_path = os.path.join(folder, "cover_letter.txt")
-                    cl_pdfs = [f for f in os.listdir(folder) if f.startswith("Cover_Letter_") and f.endswith(".pdf")] if os.path.exists(folder) else []
+                    cl_pdfs = [f for f in os.listdir(folder) if f.endswith("_Cover_Letter.pdf") and f.endswith(".pdf")] if os.path.exists(folder) else []
                     if cl_pdfs:
                         cl_pdf_full = os.path.join(folder, cl_pdfs[0])
                         c1_btn, c2_btn = st.columns(2)
