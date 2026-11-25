@@ -14,6 +14,9 @@ MODELS = ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.8-flash"]
 MIN_SCORE = 70
 MAX_JOBS = 25
 
+if not os.path.exists("my_resume.txt") or not open("my_resume.txt").read().strip():
+    print("ERROR: my_resume.txt is empty! Please upload or paste your resume in the Profile & API Settings tab first.")
+    raise SystemExit(1)
 base_resume = open("my_resume.txt").read()
 extra_exp = open("extra_experience.txt").read().strip() if os.path.exists("extra_experience.txt") else ""
 seen_file = "seen_jobs.txt"
