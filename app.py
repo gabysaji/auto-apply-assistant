@@ -36,19 +36,15 @@ STATUS_OPTIONS = ["Ready to Submit", "Applied", "Interviewing", "Rejected", "Ski
 
 with st.sidebar:
     st.subheader("Pipeline Actions")
-    if st.button("1. Fetch Fresh Jobs", use_container_width=True, type="primary"):
-        with st.spinner("Scanning live roles across target countries..."):
-            res = subprocess.run(["python3", "job_fetcher.py"], capture_output=True, text=True)
-            st.success("Job fetch complete.")
-            with st.expander("Fetcher Log"):
-                st.code(res.stdout or res.stderr)
-
-    if st.button("2. Score & Tailor Resumes", use_container_width=True):
-        with st.spinner("Scoring ATS fit and building application packets..."):
-            res = subprocess.run(["python3", "auto_apply.py"], capture_output=True, text=True)
-            st.success("Application packets ready.")
-            with st.expander("Tailoring Log"):
-                st.code(res.stdout or res.stderr)
+    if st.button("Find & Tailor New Jobs", use_container_width=True, type="primary"):
+        with st.spinner("Step 1/2: Fetching global jobs..."):
+            res1 = subprocess.run(["python3", "job_fetcher.py"], capture_output=True, text=True)
+        with st.spinner("Step 2/2: Scoring ATS fit & building tailored PDFs..."):
+            res2 = subprocess.run(["python3", "auto_apply.py"], capture_output=True, text=True)
+        st.success("Pipeline complete! Refreshing dashboard...")
+        with st.expander("View Run Logs"):
+            st.code((res1.stdout or res1.stderr) + "\n---\n" + (res2.stdout or res2.stderr))
+        st.rerun()
             st.rerun()
 
     st.divider()
