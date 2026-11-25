@@ -214,11 +214,12 @@ with tab_settings:
         gh_in = scol2.text_input("GitHub / Portfolio URL", value=env_vars.get("GITHUB_URL", ""))
 
         resume_in = st.text_area("Master Resume Text (Auto-filled from upload or edit directly)", value=curr_resume, height=260)
+        saved_count = len([b for b in curr_extra.split("\n\n") if b.strip()]) if curr_extra.strip() else 0
         extra_in = st.text_area(
-            "Optional Extra Experience & Projects Bank (Included in tailored CV ONLY when relevant to the target job)",
-            value=curr_extra,
-            height=160,
-            placeholder="Add extra home labs, freelance work, or certifications here. They will only be added to your tailored PDF when relevant to the specific job."
+            f"Add New Experience / Project to CV Bank ({saved_count} saved item(s) — clears after saving & used ONLY when relevant)",
+            value="",
+            height=140,
+            placeholder="Paste a new project or experience here and click Save Settings. It will be stored privately and cleared from this box."
         )
 
         if st.form_submit_button("Save Settings", type="primary"):
@@ -228,6 +229,9 @@ with tab_settings:
                 ef.write(f'GITHUB_URL="{gh_in.strip()}"\n')
             with open("my_resume.txt", "w") as rf:
                 rf.write(resume_in.strip() + "\n")
-            with open("extra_experience.txt", "w") as xf:
-                xf.write(extra_in.strip() + "\n")
-            st.success("Saved! Your resume, optional experience bank, and API settings are ready.")
+            if extra_in.strip():
+                combined_extra = (curr_extra.strip() + "\n\n" + extra_in.strip()).strip()
+                with open("extra_experience.txt", "w") as xf:
+                    xf.write(combined_extra + "\n")
+            st.success("Saved! New experience stored in CV bank and input box cleared.")
+            st.rerun()
