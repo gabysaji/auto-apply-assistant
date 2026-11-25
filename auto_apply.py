@@ -52,16 +52,22 @@ def render_with_scale(data, scale):
 
     pdf.set_font("Helvetica", "", 9.2 * scale)
     pdf.set_text_color(60, 60, 60)
-    cb = " | ".join([x.strip() for x in clean(data.get("contact", "")).split("|") if x.strip() and "linkedin" not in x.lower() and "github" not in x.lower()])
-    bw, lw, sw, gw = pdf.get_string_width(cb + " | "), pdf.get_string_width("LinkedIn"), pdf.get_string_width(" | "), pdf.get_string_width("GitHub")
-    pdf.set_x((pdf.w - (bw + lw + sw + gw)) / 2)
-    pdf.cell(w=bw, h=5 * scale, text=cb + " | ")
-    pdf.set_text_color(15, 80, 160); pdf.set_font("Helvetica", "U", 9.2 * scale)
-    pdf.cell(w=lw, h=5 * scale, text="LinkedIn", link=LINKEDIN_URL)
-    pdf.set_text_color(60, 60, 60); pdf.set_font("Helvetica", "", 9.2 * scale)
-    pdf.cell(w=sw, h=5 * scale, text=" | ")
-    pdf.set_text_color(15, 80, 160); pdf.set_font("Helvetica", "U", 9.2 * scale)
-    pdf.cell(w=gw, h=5 * scale, text="GitHub", link=GITHUB_URL, new_x="LMARGIN", new_y="NEXT")
+    cb_items = [x.strip() for x in clean(data.get("contact", "")).split("|") if x.strip() and "linkedin" not in x.lower() and "github" not in x.lower()]
+    tokens = [(x, f"mailto:{x}" if "@" in x else "") for x in cb_items] + [("LinkedIn", LINKEDIN_URL), ("GitHub", GITHUB_URL)]
+    sep = " | "
+    total_w = sum(pdf.get_string_width(t) for t, _ in tokens) + pdf.get_string_width(sep) * (len(tokens) - 1)
+    pdf.set_x((pdf.w - total_w) / 2)
+    for idx, (t, lnk) in enumerate(tokens):
+        if idx > 0:
+            pdf.set_text_color(60, 60, 60); pdf.set_font("Helvetica", "", 9.2 * scale)
+            pdf.cell(w=pdf.get_string_width(sep), h=5 * scale, text=sep)
+        if lnk:
+            pdf.set_text_color(15, 80, 160); pdf.set_font("Helvetica", "U", 9.2 * scale)
+            pdf.cell(w=pdf.get_string_width(t), h=5 * scale, text=t, link=lnk)
+        else:
+            pdf.set_text_color(60, 60, 60); pdf.set_font("Helvetica", "", 9.2 * scale)
+            pdf.cell(w=pdf.get_string_width(t), h=5 * scale, text=t)
+    pdf.ln(5 * scale)
 
     pdf.set_text_color(40, 40, 40); pdf.set_font("Helvetica", "I", 8.8 * scale)
     reg = str(data.get("region", "India")).strip()
