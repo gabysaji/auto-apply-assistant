@@ -83,7 +83,7 @@ def render_with_scale(data, scale):
 
     if data.get("summary"):
         hdr("Professional Summary"); pdf.set_font("Helvetica", "", bf); wb(data["summary"]); pdf.ln(sg)
-    if data.get("skills"):
+    sk = data.get("skills", ""); wb(" | ".join(sk) if isinstance(sk, list) else " | ".join([x.strip(" -•") for x in re.split(r"[\n|]+", str(sk)) if x.strip()]), h=4.8 * scale)
         hdr("Technical & Compliance Core Skills"); pdf.set_font("Helvetica", "", bf)
         for s in data["skills"]: wb(s)
         pdf.ln(sg)
@@ -107,7 +107,7 @@ def render_with_scale(data, scale):
             if "experion" in role_t.lower() and comp_t:
                 role_t, comp_t = comp_t, role_t
 
-            sub_left = f"{comp_t} - {loc_t}" if (comp_t and loc_t) else (comp_t or loc_t)
+            sub_left = f"{comp_t} - {loc_t}" if (comp_t and loc_t and comp_t.lower() != loc_t.lower()) else (comp_t or loc_t)
 
             if role_t:
                 pdf.set_font("Helvetica", "B", 9.8 * scale)
