@@ -83,11 +83,12 @@ def render_with_scale(data, scale):
 
         if data.get("summary"):
         hdr("Professional Summary"); pdf.set_font("Helvetica", "", bf); wb(data["summary"]); pdf.ln(sg)
-        sk = data.get("skills", ""); wb(" | ".join(sk) if isinstance(sk, list) else " | ".join([x.strip(" -•") for x in re.split(r"[\n|]+", str(sk)) if x.strip()]), h=4.8 * scale)
+    if data.get("skills"):
         hdr("Technical & Compliance Core Skills"); pdf.set_font("Helvetica", "", bf)
-        for s in data["skills"]: wb(s)
+        sk = data.get("skills", "")
+        wb(" | ".join(sk) if isinstance(sk, list) else " | ".join([x.strip(" -•") for x in re.split(r"[\n|]+", str(sk)) if x.strip()]), h=4.8 * scale)
         pdf.ln(sg)
-        if data.get("experience"):
+    if data.get("experience"):
         hdr("Professional Experience & Security Engineering")
         for exp in data["experience"]:
         pdf.set_x(pdf.l_margin)
