@@ -229,7 +229,7 @@ OPTIONAL EXTRA EXPERIENCE/PROJECTS BANK (Include ONLY if directly relevant to th
 
     li_note = result.get("linkedin_note", "").strip()
     if len(li_note) > 280:
-        li_note = li_note[:277].rsplit(" ", 1) + "..."
+        li_note = li_note[:277].rsplit(" ", 1)[0] + "..."
 
     open(os.path.join(folder, "linkedin_note.txt"), "w").write(li_note)
     open(os.path.join(folder, "recruiter_email.txt"), "w").write(result.get("recruiter_email", "").strip())
