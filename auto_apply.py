@@ -91,17 +91,23 @@ def render_with_scale(data, scale):
         hdr("Professional Experience & Security Engineering")
         for exp in data["experience"]:
             pdf.set_x(pdf.l_margin)
-            if "role" in exp or "company" in exp:
-                role_t = clean(exp.get("role", ""))
-                comp_t = clean(exp.get("company", ""))
-                loc_t = clean(exp.get("location", ""))
-                right_d = clean(exp.get("dates", ""))
-                sub_left = f"{comp_t} - {loc_t}" if (comp_t and loc_t) else (comp_t or loc_t)
-            else:
+            role_t = clean(exp.get("role", ""))
+            comp_t = clean(exp.get("company", ""))
+            loc_t = clean(exp.get("location", ""))
+            right_d = clean(exp.get("dates", ""))
+
+            if not role_t and exp.get("title"):
                 parts = [x.strip() for x in clean(exp.get("title", "")).split("|") if x.strip()]
                 role_t = parts.pop(0) if parts else ""
-                right_d = parts.pop(-1) if parts else ""
-                sub_left = " - ".join(parts)
+                if parts and any(m in parts[-1] for m in ["202", "201", "Present", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]):
+                    right_d = parts.pop(-1)
+                comp_t = parts.pop(0) if parts else ""
+                loc_t = " - ".join(parts)
+
+            if "experion" in role_t.lower() and comp_t:
+                role_t, comp_t = comp_t, role_t
+
+            sub_left = f"{comp_t} - {loc_t}" if (comp_t and loc_t) else (comp_t or loc_t)
 
             if role_t:
                 pdf.set_font("Helvetica", "B", 9.8 * scale)
@@ -114,7 +120,7 @@ def render_with_scale(data, scale):
                     pdf.cell(w=pdf.epw - dw, h=4.6 * scale, text=sub_left)
                     pdf.cell(w=dw, h=4.6 * scale, text=right_d, align="R", new_x="LMARGIN", new_y="NEXT")
                 elif sub_left:
-                    wb(f"{sub_left} ({right_d})" if right_d else sub_left, h=4.6 * scale)
+                    wb(f"{sub_left} | {right_d}" if right_d else sub_left, h=4.6 * scale)
                 else:
                     pdf.cell(w=pdf.epw, h=4.6 * scale, text=right_d, align="R", new_x="LMARGIN", new_y="NEXT")
             pdf.set_font("Helvetica", "", bf)
