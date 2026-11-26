@@ -76,7 +76,7 @@ else:
     selected_region = st.selectbox("Region Filter", regions, label_visibility="collapsed")
     scoped_df = df[df["Region"] == selected_region].copy() if (selected_region != "All Regions" and "Region" in df.columns) else df.copy()
 
-    tab_queue, tab_history, tab_settings = st.tabs(["Active Queue (Ready to Submit)", "Submitted & Archive", "Profile & API Settings"])
+    tab_queue, tab_custom, tab_history, tab_settings = st.tabs(["Active Queue (Ready to Submit)", "Tailor Custom JD", "Submitted & Archive", "Profile & API Settings"])
 
     with tab_queue:
         queue_df = scoped_df[scoped_df["Status"] == "Ready to Submit"].copy()
@@ -154,6 +154,39 @@ else:
                         c1_btn.download_button("Download Cover Letter PDF", open(cl_pdf_full, "rb").read(), file_name=cl_pdfs[0], mime="application/pdf", use_container_width=True)
                         if c2_btn.button("Open Cover Letter in Preview", use_container_width=True, key=f"prev_cl_{chosen_idx}"): subprocess.run(["open", cl_pdf_full])
                     st.text_area("Cover Letter", value=open(cl_path).read().strip(), height=280, label_visibility="collapsed", key=f"cl_{chosen_idx}") if os.path.exists(cl_path) else st.info("Run '2. Score & Tailor Resumes' to generate cover letter.")
+
+
+    with tab_custom:
+        st.subheader("Tailor Resume & Cover Letter from Any Offline Job Description")
+        st.caption("Paste a job description from an email, WhatsApp message, PDF, or private portal to build a custom 1-page ATS packet immediately.")
+        with st.form("custom_jd_form"):
+            cc1, cc2 = st.columns(2)
+            c_comp = cc1.text_input("Company Name *", placeholder="e.g., CrowdStrike")
+            c_role = cc2.text_input("Job Title *", placeholder="e.g., Detection Engineer")
+            cc3, cc4, cc5 = st.columns(3)
+            c_loc = cc3.text_input("Location", placeholder="e.g., Bengaluru / Remote")
+            c_reg = cc4.text_input("Region / Country", value="India")
+            c_url = cc5.text_input("Application Link (Optional)", placeholder="https://...")
+            c_jd = st.text_area("Paste Full Job Description *", height=240, placeholder="Paste the complete job requirements, responsibilities, and qualifications here...")
+
+            if st.form_submit_button("Generate Tailored ATS Packet", type="primary"):
+                if not c_comp.strip() or not c_role.strip() or not c_jd.strip():
+                    st.error("Please fill in Company Name, Job Title, and Job Description.")
+                else:
+                    with st.spinner(f"Scoring ATS fit and building custom 1-page PDFs for {c_comp}..."):
+                        try:
+                            import auto_apply
+                            res_data, r_pdf, cl_pdf = auto_apply.process_custom_jd(
+                                c_comp.strip(), c_role.strip(), c_loc.strip(), c_reg.strip(), c_url.strip(), c_jd.strip()
+                            )
+                            st.success(f"Done! ATS Match Score: {res_data.get('ats_score', 85)}% — Added to your Active Queue!")
+                            dl1, dl2 = st.columns(2)
+                            if os.path.exists(r_pdf):
+                                dl1.download_button("Download Tailored Resume PDF", open(r_pdf, "rb").read(), file_name=os.path.basename(r_pdf), mime="application/pdf", use_container_width=True)
+                            if os.path.exists(cl_pdf):
+                                dl2.download_button("Download Cover Letter PDF", open(cl_pdf, "rb").read(), file_name=os.path.basename(cl_pdf), mime="application/pdf", use_container_width=True)
+                        except Exception as e:
+                            st.error(f"Could not generate packet: {e}")
 
     with tab_history:
         hist_df = scoped_df[scoped_df["Status"] != "Ready to Submit"].copy()
