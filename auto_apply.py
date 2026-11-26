@@ -90,34 +90,33 @@ def render_with_scale(data, scale):
     if data.get("experience"):
         hdr("Professional Experience & Security Engineering")
         for exp in data["experience"]:
-            raw_t = clean(exp.get("title", ""))
-            parts = [x.strip() for x in raw_t.split("|")]
             pdf.set_x(pdf.l_margin)
-            if len(parts) >= 3:
-                role_t = parts.pop(0); comp_t = parts.pop(0); right_d = " | ".join(parts)
+            if "role" in exp or "company" in exp:
+                role_t = clean(exp.get("role", ""))
+                comp_t = clean(exp.get("company", ""))
+                loc_t = clean(exp.get("location", ""))
+                right_d = clean(exp.get("dates", ""))
+                sub_left = f"{comp_t} - {loc_t}" if (comp_t and loc_t) else (comp_t or loc_t)
+            else:
+                parts = [x.strip() for x in clean(exp.get("title", "")).split("|") if x.strip()]
+                role_t = parts.pop(0) if parts else ""
+                right_d = parts.pop(-1) if parts else ""
+                sub_left = " - ".join(parts)
+
+            if role_t:
                 pdf.set_font("Helvetica", "B", 9.8 * scale)
                 wb(role_t, h=4.8 * scale)
+            if sub_left or right_d:
                 pdf.set_x(pdf.l_margin)
                 pdf.set_font("Helvetica", "I", 9.2 * scale)
-                dw = pdf.get_string_width(right_d) + 2
-                pdf.cell(w=pdf.epw - dw, h=4.6 * scale, text=comp_t)
-                pdf.cell(w=dw, h=4.6 * scale, text=right_d, align="R", new_x="LMARGIN", new_y="NEXT")
-            elif len(parts) == 2:
-                left_t = parts.pop(0); right_d = parts.pop(0)
-                pdf.set_font("Helvetica", "B", 9.8 * scale)
-                dw = pdf.get_string_width(right_d) + 2
-                if pdf.get_string_width(left_t) + dw > pdf.epw:
-                    wb(left_t, h=4.8 * scale)
-                    pdf.set_x(pdf.l_margin)
-                    pdf.set_font("Helvetica", "I", 9.2 * scale)
-                    pdf.cell(w=pdf.epw, h=4.6 * scale, text=right_d, align="R", new_x="LMARGIN", new_y="NEXT")
+                dw = (pdf.get_string_width(right_d) + 3) if right_d else 0
+                if sub_left and right_d and (pdf.get_string_width(sub_left) + dw <= pdf.epw):
+                    pdf.cell(w=pdf.epw - dw, h=4.6 * scale, text=sub_left)
+                    pdf.cell(w=dw, h=4.6 * scale, text=right_d, align="R", new_x="LMARGIN", new_y="NEXT")
+                elif sub_left:
+                    wb(f"{sub_left} ({right_d})" if right_d else sub_left, h=4.6 * scale)
                 else:
-                    pdf.cell(w=pdf.epw - dw, h=5.0 * scale, text=left_t)
-                    pdf.set_font("Helvetica", "I", 9.2 * scale)
-                    pdf.cell(w=dw, h=5.0 * scale, text=right_d, align="R", new_x="LMARGIN", new_y="NEXT")
-            else:
-                pdf.set_font("Helvetica", "B", 9.8 * scale)
-                wb(raw_t, h=5.0 * scale)
+                    pdf.cell(w=pdf.epw, h=4.6 * scale, text=right_d, align="R", new_x="LMARGIN", new_y="NEXT")
             pdf.set_font("Helvetica", "", bf)
             for b in exp.get("bullets", []): wb(f"  - {b}")
             pdf.ln(1.8 * scale)
@@ -195,7 +194,7 @@ for idx, row in jobs.iterrows():
 
     print(f"[{idx + 1}] {title} at {company} ({region})...", end=" ", flush=True)
     prompt = f"""Compare Resume vs JD for an Indian candidate (UK MSc Cyber Security, immediate joiner). Target: {region} ({loc}).
-Never invent fake experience/tools. ALWAYS preserve exact employment start and end dates from the candidate's resume in every experience title.
+Never invent fake experience/tools. ALWAYS preserve exact job title, company name, workplace location (e.g. Trivandrum, Kerala), and exact start/end dates from the resume.
 DYNAMIC EXPERIENCE-STAGE RULE (Adapts to ANY candidate's resume):
 1. First calculate the candidate's actual years of full-time experience (Y) from their resume (counting internships/academic work as ~0-1 yr Entry-Level).
 2. PRIORITY MATCH (85-98%): Roles matching the candidate's actual career stage (e.g., if Y <= 2, prioritize Entry-Level, Graduate, Associate & 0-3 yr roles; if Y = 10, prioritize Senior, Staff, Principal & 7-12 yr roles).
