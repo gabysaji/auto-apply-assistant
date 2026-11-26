@@ -81,7 +81,7 @@ def render_with_scale(data, scale):
         pdf.set_draw_color(20, 50, 90); pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
         pdf.set_text_color(0, 0, 0); pdf.ln(1.8 * scale)
 
-        if data.get("summary"):
+    if data.get("summary"):
         hdr("Professional Summary"); pdf.set_font("Helvetica", "", bf); wb(data["summary"]); pdf.ln(sg)
     if data.get("skills"):
         hdr("Technical & Compliance Core Skills"); pdf.set_font("Helvetica", "", bf)
@@ -91,8 +91,8 @@ def render_with_scale(data, scale):
     if data.get("experience"):
         hdr("Professional Experience & Security Engineering")
         for exp in data["experience"]:
-        pdf.set_x(pdf.l_margin)
-        role_t = clean(exp.get("role", ""))
+            pdf.set_x(pdf.l_margin)
+            role_t = clean(exp.get("role", ""))
             comp_t = clean(exp.get("company", ""))
             loc_t = clean(exp.get("location", ""))
             right_d = clean(exp.get("dates", ""))
